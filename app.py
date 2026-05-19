@@ -1,33 +1,47 @@
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
+import asyncio
 
 app = FastAPI()
 
+latest_frame = None
 connected_devices = 0
 
 HTML = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Mobile Viewer</title>
+<title>Mobile Viewer</title>
 </head>
-<body style="font-family:Arial;text-align:center;padding:40px;">
-    <h1>Mobile Viewer Dashboard</h1>
-    <h2>Server Online ✅</h2>
-    <div id="status">Waiting for device...</div>
-</body>
+<body style="font-family:Arial;text-align:center;padding:20px;">
+<h1>Mobile Viewer Dashboard</h1>
+
+<div id="status">Waiting...</div>
+
+<img id="screen"
+style="width:320px;border:2px solid #444;
+border-radius:12px;" />
 
 <script>
 const ws = new WebSocket(
-    (location.protocol === "https:" ? "wss://" : "ws://")
-    + location.host + "/viewer"
+(location.protocol === "https:" ? "wss://" : "ws://")
++ location.host + "/viewer"
 );
 
 ws.onmessage = (event) => {
-    document.getElementById("status").innerText =
-        event.data;
+    const data = JSON.parse(event.data);
+
+    document.getElementById("status")
+    .innerText =
+    "Connected Devices: " + data.devices;
+
+    if(data.frame){
+        document.getElementById("screen").src =
+        "data:image/jpeg;base64," + data.frame;
+    }
 };
 </script>
+</body>
 </html>
 """
 
@@ -38,7 +52,7 @@ async def root():
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    global connected_devices
+    global latest_frame, connected_devices
 
     await websocket.accept()
     connected_devices += 1
@@ -46,17 +60,31 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             message = await websocket.receive_text()
-            print("Device:", message)
 
-    except:
+            if message:
+                latest_frame = message
+
+    except WebSocketDisconnect:
+        pass
+
+    finally:
         connected_devices -= 1
 
 
 @app.websocket("/viewer")
 async def viewer_socket(websocket: WebSocket):
+
     await websocket.accept()
 
-    while True:
-        await websocket.send_text(
-            f"Connected Devices: {connected_devices}"
-        )
+    try:
+        while True:
+
+            await websocket.send_json({
+                "devices": connected_devices,
+                "frame": latest_frame
+            })
+
+            await asyncio.sleep(0.3)
+
+    except WebSocketDisconnect:
+        pass
