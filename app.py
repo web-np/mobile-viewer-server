@@ -2,15 +2,32 @@ import os
 import io
 import json
 import base64
+import asyncio
+
 from datetime import datetime
 
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseUpload
+from fastapi import (
+    FastAPI,
+    WebSocket,
+    WebSocketDisconnect
+)
 
-from datetime import datetimefrom fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.responses import HTMLResponse
-import asyncio
+from fastapi.responses import (
+    HTMLResponse
+)
+
+from google.oauth2 import (
+    service_account
+)
+
+from googleapiclient.discovery import (
+    build
+)
+
+from googleapiclient.http import (
+    MediaIoBaseUpload
+)
+
 SAVE_FOLDER = "screenshots"
 os.makedirs(SAVE_FOLDER, exist_ok=True)
 app = FastAPI()
