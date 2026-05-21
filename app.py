@@ -1,7 +1,10 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+import os
+import base64
+from datetime import datetimefrom fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 import asyncio
-
+SAVE_FOLDER = "screenshots"
+os.makedirs(SAVE_FOLDER, exist_ok=True)
 app = FastAPI()
 
 latest_frame = None
@@ -63,7 +66,29 @@ async def websocket_endpoint(websocket: WebSocket):
 
             if message:
                 latest_frame = message
+try:
 
+    image_data = base64.b64decode(
+        message
+    )
+
+    filename = datetime.now().strftime(
+        "%Y%m%d_%H%M%S.jpg"
+    )
+
+    filepath = os.path.join(
+        SAVE_FOLDER,
+        filename
+    )
+
+    with open(
+        filepath,
+        "wb"
+    ) as f:
+        f.write(image_data)
+
+except Exception as e:
+    print("Save error:", e)
     except WebSocketDisconnect:
         pass
 
