@@ -2,3 +2,6 @@ fastapi
 uvicorn
 jinja2
 websockets
+google-api-python-client
+google-auth
+google-auth-httplib2
