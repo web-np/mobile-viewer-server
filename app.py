@@ -29,8 +29,7 @@ def get_flow():
         scopes=[
             "https://www.googleapis.com/auth/drive.file"
         ],
-        redirect_uri=
-        "https://mobile-viewer-server.onrender.com/oauth2callback"
+        redirect_uri="https://mobile-viewer-server.onrender.com/oauth2callback"
     )
 
     return flow
