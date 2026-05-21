@@ -118,7 +118,7 @@ def save_to_drive(image_b64):
         )
 latest_frame = None
 connected_devices = 0
-
+last_upload_time = 0
 
 HTML = """
 <html>
