@@ -193,39 +193,32 @@ async def login():
     auth_url, state = (
         flow.authorization_url(
             access_type="offline",
-            include_granted_scopes="true"
+            include_granted_scopes="true",
+            prompt="consent"
         )
     )
 
-    return RedirectResponse(
-        auth_url
-    )
+    return RedirectResponse(auth_url)
 
 @app.get("/")
 async def home():
     return HTMLResponse(HTML)
 
 @app.get("/oauth2callback")
-async def oauth2callback(
-    code: str
-):
-
-    global drive_service
+async def oauth2callback(code: str):
 
     flow = get_flow()
 
-    flow.fetch_token(
-        code=code
-    )
+    flow.fetch_token(code=code)
 
-    credentials = (
-        flow.credentials
-    )
+    creds = flow.credentials
+
+    global drive_service
 
     drive_service = build(
         "drive",
         "v3",
-        credentials=credentials
+        credentials=creds
     )
 
     return {
