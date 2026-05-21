@@ -159,7 +159,9 @@ async def home():
 
 
 @app.websocket("/ws")
-async def mobile_socket(ws: WebSocket):
+async def mobile_socket(
+    ws: WebSocket
+):
 
     global latest_frame
     global connected_devices
@@ -177,8 +179,13 @@ async def mobile_socket(ws: WebSocket):
             )
 
             latest_frame = message
-save_to_drive(message)
+
+            save_to_drive(
+                message
+            )
+
     except:
+
         pass
 
     connected_devices -= 1
