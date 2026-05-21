@@ -93,20 +93,21 @@ def save_to_drive(image_b64):
             "%Y%m%d_%H%M%S.jpg"
         )
 
-        metadata = {
-            "name": filename,
-            "parents": [folder_id]
-        }
-
+       metadata = {
+    "name": filename,
+    "parents": [folder_id],
+    "supportsAllDrives": True
+}
         media = MediaIoBaseUpload(
             io.BytesIO(image_bytes),
             mimetype="image/jpeg"
         )
 
-        drive_service.files().create(
-            body=metadata,
-            media_body=media
-        ).execute()
+       drive_service.files().create(
+    body=metadata,
+    media_body=media,
+    supportsAllDrives=True
+).execute()
 
         print("Uploaded ✅")
 
