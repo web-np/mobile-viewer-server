@@ -1,6 +1,8 @@
 import asyncio
 from fastapi import FastAPI, WebSocket
 from fastapi.responses import HTMLResponse
+from fastapi.responses import RedirectResponse
+from google_auth_oauthlib.flow import Flow
 
 import io
 import os
@@ -13,6 +15,25 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
 import time
 app = FastAPI()
+oauth_credentials = None
+def get_flow():
+
+    oauth_json = json.loads(
+        os.getenv(
+            "GOOGLE_OAUTH_JSON"
+        )
+    )
+
+    flow = Flow.from_client_config(
+        oauth_json,
+        scopes=[
+            "https://www.googleapis.com/auth/drive.file"
+        ],
+        redirect_uri=
+        "https://mobile-viewer-server.onrender.com/oauth2callback"
+    )
+
+    return flow
 # Google Drive Setup
 
 drive_service = None
@@ -165,13 +186,53 @@ ws.onmessage = (event)=>{
 </body>
 </html>
 """
+@app.get("/login")
+async def login():
 
+    flow = get_flow()
+
+    auth_url, state = (
+        flow.authorization_url(
+            access_type="offline",
+            include_granted_scopes="true"
+        )
+    )
+
+    return RedirectResponse(
+        auth_url
+    )
 
 @app.get("/")
 async def home():
     return HTMLResponse(HTML)
 
+@app.get("/oauth2callback")
+async def oauth2callback(
+    code: str
+):
 
+    global drive_service
+
+    flow = get_flow()
+
+    flow.fetch_token(
+        code=code
+    )
+
+    credentials = (
+        flow.credentials
+    )
+
+    drive_service = build(
+        "drive",
+        "v3",
+        credentials=credentials
+    )
+
+    return {
+        "message":
+        "Google Drive Connected ✅"
+    }
 @app.websocket("/ws")
 async def mobile_socket(
     ws: WebSocket
