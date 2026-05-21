@@ -92,8 +92,7 @@ def save_to_drive(image_b64):
         filename = datetime.now().strftime(
             "%Y%m%d_%H%M%S.jpg"
         )
-
-       metadata = {
+        metadata = {
     "name": filename,
     "parents": [folder_id]
 }
