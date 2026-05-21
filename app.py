@@ -11,7 +11,7 @@ from datetime import datetime
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
-
+import time
 app = FastAPI()
 # Google Drive Setup
 
@@ -63,10 +63,25 @@ except Exception as e:
 
 def save_to_drive(image_b64):
 
+    global last_upload_time
+
     if drive_service is None:
         return
 
     try:
+
+        current_time = time.time()
+
+        if (
+            current_time
+            - last_upload_time
+            < 10
+        ):
+            return
+
+        last_upload_time = (
+            current_time
+        )
 
         image_bytes = (
             base64.b64decode(
@@ -93,9 +108,7 @@ def save_to_drive(image_b64):
             media_body=media
         ).execute()
 
-        print(
-            "Uploaded ✅"
-        )
+        print("Uploaded ✅")
 
     except Exception as e:
 
