@@ -1,5 +1,6 @@
 import asyncio
 from fastapi import FastAPI, WebSocket
+from fastapi import WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from fastapi.responses import RedirectResponse
 from google_auth_oauthlib.flow import Flow
@@ -188,26 +189,19 @@ ws.onmessage = (event)=>{
 @app.get("/login")
 async def login():
 
-def get_flow():
+    flow = get_flow()
 
-    oauth_json = json.loads(
-        os.getenv(
-            "GOOGLE_OAUTH_JSON"
+    authorization_url, _ = (
+        flow.authorization_url(
+            access_type="offline",
+            include_granted_scopes="true",
+            prompt="consent"
         )
     )
 
-    flow = Flow.from_client_config(
-        oauth_json,
-        scopes=[
-            "https://www.googleapis.com/auth/drive.file"
-        ]
+    return RedirectResponse(
+        authorization_url
     )
-
-    flow.redirect_uri = (
-        "https://mobile-viewer-server.onrender.com/oauth2callback"
-    )
-
-    return flow
 
 @app.get("/")
 async def home():
@@ -261,9 +255,22 @@ async def mobile_socket(
             save_to_drive(
                 message
             )
+        except Exception as e:
 
-  except WebSocketDisconnect:
-    print("Mobile disconnected")
+        print(
+            "Mobile socket error:",
+            e
+        )
+
+    finally:
+
+        connected_devices -= 1
+
+        print(
+            "Mobile disconnected"
+        )
+
+ 
 
 
 @app.websocket("/viewer")
