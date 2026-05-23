@@ -262,28 +262,40 @@ async def mobile_socket(
                 message
             )
 
-    except:
-
-        pass
-
-    connected_devices -= 1
+  except WebSocketDisconnect:
+    print("Mobile disconnected")
 
 
 @app.websocket("/viewer")
-async def viewer_socket(
-    ws: WebSocket
-):
+async def viewer_socket(ws: WebSocket):
 
     await ws.accept()
 
-    while True:
+    try:
 
-        await ws.send_json({
-            "devices":
-            connected_devices,
+        while True:
 
-            "frame":
-            latest_frame
-        })
+            if latest_frame:
 
-        await asyncio.sleep(0.5)
+                try:
+
+                    await ws.send_json({
+                        "image": latest_frame
+                    })
+
+                except Exception as e:
+
+                    print(
+                        "Viewer disconnected:",
+                        e
+                    )
+                    break
+
+            await asyncio.sleep(1)
+
+    except Exception as e:
+
+        print(
+            "Viewer socket error:",
+            e
+        )
