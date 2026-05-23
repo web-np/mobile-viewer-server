@@ -188,17 +188,26 @@ ws.onmessage = (event)=>{
 @app.get("/login")
 async def login():
 
-    flow = get_flow()
+def get_flow():
 
-    auth_url, state = (
-        flow.authorization_url(
-            access_type="offline",
-            include_granted_scopes="true",
-            prompt="consent"
+    oauth_json = json.loads(
+        os.getenv(
+            "GOOGLE_OAUTH_JSON"
         )
     )
 
-    return RedirectResponse(auth_url)
+    flow = Flow.from_client_config(
+        oauth_json,
+        scopes=[
+            "https://www.googleapis.com/auth/drive.file"
+        ]
+    )
+
+    flow.redirect_uri = (
+        "https://mobile-viewer-server.onrender.com/oauth2callback"
+    )
+
+    return flow
 
 @app.get("/")
 async def home():
@@ -209,7 +218,9 @@ async def oauth2callback(code: str):
 
     flow = get_flow()
 
-    flow.fetch_token(code=code)
+    flow.fetch_token(
+        code=code
+    )
 
     creds = flow.credentials
 
